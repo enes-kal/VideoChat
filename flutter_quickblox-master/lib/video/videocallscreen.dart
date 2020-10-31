@@ -34,6 +34,7 @@ Future<void> play(String sessionId ) async {
 @override
   void initState() {
     initvideo();
+    _listenForCall();
     // TODO: implement initState
     super.initState();
   }
@@ -76,12 +77,13 @@ new Container(
   decoration: new BoxDecoration(color: Colors.black54),
 ),
 RaisedButton(child:Text('CALL'), onPressed: (){
-  getcurrentsession();
-
-  play(sessionId);
+ startCall();
 }),
 RaisedButton(child: Text('ACCEPT'),onPressed: (){
 _acceptCall();
+}),
+RaisedButton(child: Text('REJECT'),onPressed: (){
+_rejectCall();
 })
         ],
       ),
@@ -89,40 +91,20 @@ _acceptCall();
   }
 
 
-     _acceptCall() async{
+
+
+void _rejectCall()async
+{
+  
   try {
-
-    QBRTCSession session = await QB.webrtc.accept(sessionId);
-    print('listening call'+session.id+', initiatorid:'+session.initiatorId.toString());
-    sessionId = session.id;
-    play(sessionId);
-    setState(() {
-    //  _callStarted = true;
-    });
-
-  } on PlatformException catch (e) {
-    // Some error occured, look at the exception message for more details
-  }
-}
-
-
-
-  Future<void> getcurrentsession()async {
-    initvideo();
-    List<int> opponentIds = [123729719, 123730736];
-    int sessionType = QBRTCSessionTypes.VIDEO;
-    try {
-      
-     QBRTCSession sessionx = await QB.webrtc.call(opponentIds, sessionType);
-    //  sessionx.id; 
- // QBSession session = await QB.auth.getSession();
- sessionId=sessionx.id;
-  print(sessionx.id);
+  QBRTCSession session = await QB.webrtc.hangUp(sessionId );
 } on PlatformException catch (e) {
-  // Some error occured, look at the exception message for more details
-  print(e);
+  // Some error occured, look at the exception message for more details 
 }
-  }
+}
+
+
+
 
   void _onLocalVideoViewCreated(RTCVideoViewController controller) {
   _localVideoViewController = controller;
@@ -130,6 +112,97 @@ _acceptCall();
 
 void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
   _remoteVideoViewController = controller;
+}
+
+
+
+ startCall() async{
+  List<int> opponentIds = [123729719, 123730736];
+  bool connected = await QB.chat.isConnected();
+  print('starting call'+connected.toString());
+  int sessionType = QBRTCSessionTypes.VIDEO;
+
+  try {
+    QBRTCSession session = await QB.webrtc.call(opponentIds, sessionType);
+    print('starting call'+session.toString());
+    sessionId = session.id;
+    play(session.id);
+  } on PlatformException catch (e) {
+    print('error while initializing call'+e.toString());
+  }
+}
+
+ _acceptCall() async{
+  try {
+
+    QBRTCSession session = await QB.webrtc.accept(sessionId);
+    print('listening call'+session.id+', initiatorid:'+session.initiatorId.toString());
+    sessionId = session.id;
+    play(sessionId);
+    setState(() {
+  //    _callStarted = true;
+    });
+
+  } on PlatformException catch (e) {
+    // Some error occured, look at the exception message for more details
+  }
+}
+
+  _endCall() async{
+  try {
+    QBRTCSession session = await QB.webrtc.hangUp(sessionId);
+    setState(() {
+     
+    });
+  } on PlatformException catch (e) {
+    // Some error occured, look at the exception message for more details
+  }
+}
+
+
+
+ _listenForCall() async {
+  print('listening for call');
+  String eventName = QBRTCEventTypes.CALL;
+  try { 
+    
+    await QB.webrtc.subscribeRTCEventTypes(eventName, (data) async {
+      Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
+      Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
+      String sessionId = sessionMap["id"];
+      int initiatorId = sessionMap["initiatorId"];
+      int callType = sessionMap["type"];
+
+      setState(() {
+        this.sessionId = sessionId;
+      //  _incomingCall = true;
+      });
+     // play(myQBUserId,initiatorId,sessionId);
+    });
+
+    await QB.webrtc.subscribeRTCEventTypes(QBRTCEventTypes.RECEIVED_VIDEO_TRACK, (data) async {
+      Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
+      Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
+      String sessionId = sessionMap["id"];
+      int initiatorId = sessionMap["initiatorId"];
+      int callType = sessionMap["type"];
+
+      print('receiving video even from initiator:'+initiatorId.toString());
+
+      this.sessionId = sessionId;
+      setState(() {
+       // _callStarted = true;
+      });
+
+      await QB.webrtc.enableAudio(sessionId, enable: true);
+
+      await QB.webrtc.enableVideo(sessionId, enable: true);
+
+    });
+
+  } on PlatformException catch (e) {
+    print('error while listening for calls'+e.toString());
+  }
 }
 }
 
