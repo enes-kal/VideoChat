@@ -85,11 +85,14 @@ _acceptCall();
 RaisedButton(child: Text('REJECT'),onPressed: (){
 _rejectCall();
 }),
-RaisedButton(child: Text('LISTEN'),onPressed: (){
-_listenForCall();
+RaisedButton(child: Text('LISTEN'),onPressed: (){ 
+  // _remoteVideoViewController.play('466937e0-9409-4e1a-81a7-2d199f001c0b', opponentId);
+  //_localVideoViewController.play('df5acf1a-845f-4187-889f-ce8477c04fba', userId);
+  _remoteVideoViewController.play(sessionId, opponentId);
+  _localVideoViewController.play(sessionId, userId);
 })
         ],
-      ),
+      ), 
     );
   }
 
@@ -131,6 +134,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
     print('starting call'+session.id);
     sessionId = session.id;
   //  play(session.id,opponentId,userId);
+  //_localVideoViewController.play(sessionId, userId);
   } on PlatformException catch (e) {
     print('error while initializing call'+e.toString());
   }
@@ -176,37 +180,85 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
       String sessionId = sessionMap["id"];
       int initiatorId = sessionMap["initiatorId"];
       int callType = sessionMap["type"];
-
+       
       setState(() {
         this.sessionId = sessionId;
       //  _incomingCall = true;
       });
-        _localVideoViewController.play(sessionId, userId);
+       
     //  play(sessionId,opponentId,userId);
      // play(myQBUserId,initiatorId,sessionId);
     });
 
     await QB.webrtc.subscribeRTCEvent(QBRTCEventTypes.RECEIVED_VIDEO_TRACK, (data) async {
+    //  Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
+     //Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
+     // String sessionId = sessionMap["id"];
+    //  int initiatorId = sessionMap["initiatorId"];
+      // int callType = sessionMap["type"];
+
+    //  print('receiving video even from initiator:'+initiatorId.toString());
+
+      this.sessionId = sessionId;
+     
+ //print('START VIDEO AND AUDIO __________________________________________x___'+data+"   "+payloadMap.isEmpty.toString());
+
+ 
+
+      await QB.webrtc.enableAudio(sessionId, enable: true);
+
+      await QB.webrtc.enableVideo(sessionId, enable: true);
+     
+     
+
+    });
+
+    try {
+   await QB.webrtc.subscribeRTCEvent(QBRTCEventTypes.PEER_CONNECTION_STATE_CHANGED, (data) {
       Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
+      Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
+     int state = data["payload"]["state"];
+      int useIdx = data["payload"]["userId"];
+       int initiatorIdx = sessionMap["initiatorId"];
+    print('STATE:'+state.toString());
+    if(state==1)
+    {
+       _remoteVideoViewController.play(sessionId, initiatorIdx);
+       _localVideoViewController.play(sessionId, useIdx);
+    }
+  });
+} on PlatformException catch (e) {
+  // Some error occured, look at the exception message for more details 
+}
+
+      
+   await QB.webrtc.subscribeRTCEvent(QBRTCEventTypes.ACCEPT, (data) {
+    int useIdc = data["payload"]["userId"];
+     Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
       Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
       String sessionId = sessionMap["id"];
       int initiatorId = sessionMap["initiatorId"];
       int callType = sessionMap["type"];
 
       print('receiving video even from initiator:'+initiatorId.toString());
-  _remoteVideoViewController.play(sessionId, initiatorId);
-      this.sessionId = sessionId;
-      setState(() {
-       // _callStarted = true;
-      });
 
-      await QB.webrtc.enableAudio(sessionId, enable: true);
+     // _remoteVideoViewController.play(sessionId, useIdc);
+  // _localVideoViewController.play(sessionId, userId);
+     print('ACCEPT____ACCEPT_____ACCEPT_____ACCEPT_____ACCEPT');
+  });
 
-      await QB.webrtc.enableVideo(sessionId, enable: true);
+ 
+ await QB.webrtc.subscribeRTCEvent(QBRTCEventTypes.HANG_UP, (data) {
+    int userId = data["payload"]["userId"];
+ //_localVideoViewController.play(sessionId, userId);
+  Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
+      Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
+      String sessionId = sessionMap["id"];
+   
+      print('HANGUP____HANGUP_____HANGUP_____HANGUP_____HANGUP');
+  });
 
-      print('START VIDEO AND AUDIO _____________________________________________');
-
-    });
+  
 
   } on PlatformException catch (e) {
     print('error while listening for calls'+e.toString());
