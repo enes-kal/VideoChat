@@ -181,7 +181,8 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
         this.sessionId = sessionId;
       //  _incomingCall = true;
       });
-      play(sessionId,opponentId,userId);
+        _localVideoViewController.play(sessionId, userId);
+    //  play(sessionId,opponentId,userId);
      // play(myQBUserId,initiatorId,sessionId);
     });
 
@@ -193,7 +194,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
       int callType = sessionMap["type"];
 
       print('receiving video even from initiator:'+initiatorId.toString());
-
+  _remoteVideoViewController.play(sessionId, initiatorId);
       this.sessionId = sessionId;
       setState(() {
        // _callStarted = true;
@@ -202,6 +203,8 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
       await QB.webrtc.enableAudio(sessionId, enable: true);
 
       await QB.webrtc.enableVideo(sessionId, enable: true);
+
+      print('START VIDEO AND AUDIO _____________________________________________');
 
     });
 
