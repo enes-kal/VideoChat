@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quickblox_app/video/videocallscreen.dart';
 import 'package:quickblox_sdk/chat/constants.dart';
 import 'package:quickblox_sdk/models/qb_message.dart';
 import 'package:quickblox_sdk/quickblox_sdk.dart';
@@ -15,15 +16,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    
+   
     // TODO: implement initState
     super.initState();
   }
 
-  void chatListener()async{
-    
-  
-
+  void initVideoRTC()async{
+     try {
+  await QB.webrtc.init();
+} on PlatformException catch (e) {
+  // Some error occured, look at the exception message for more details
+}
 
   }
 
@@ -130,7 +133,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
           }),
            IconButton(icon: Icon(Icons.video_call) , onPressed:() {
-
+ Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => VideoCallScreen()),
+  );
           })
         ],
       ) 
