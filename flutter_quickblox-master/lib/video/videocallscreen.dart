@@ -73,9 +73,9 @@ new Container(
   decoration: new BoxDecoration(color: Colors.black54),
 ),
 RaisedButton(child:Text('CALL'), onPressed: (){
-  getcurrentsession();
+ // getcurrentsession();
 
-  //play();
+  play();
 }),
 RaisedButton(child: Text('ACCEPT'),onPressed: (){
 acceptcall();
@@ -88,17 +88,13 @@ acceptcall();
 
     void acceptcall()async
     {
-      
-     Map<String, Object> userInfo = new Map();
-
-     List<int> opponentIds = [123729719, 123730736];
-     int sessionType = QBRTCSessionTypes.VIDEO;
-     QBRTCSession sessionx = await QB.webrtc.call(opponentIds, sessionType);
-String sessionId = sessionx.id;
+    Map<String, Object> userInfo = new Map();
 
 try {
   QBRTCSession session = await QB.webrtc.accept(sessionId, userInfo: userInfo);
+  print(session.id);
 } on PlatformException catch (e) {
+  print('xxxE'+e);
   // Some error occured, look at the exception message for more details   
 }
 
