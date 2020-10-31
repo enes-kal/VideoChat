@@ -25,10 +25,10 @@ RTCVideoViewController _remoteVideoViewController;
 int userId = 123730736;
 int opponentId = 123729719;
 
-Future<void> play(String sessionId ) async {
+Future<void> play(String sessionId,int _opponentId,int _userId ) async {
   
-  _localVideoViewController.play(sessionId, userId);
-  _remoteVideoViewController.play(sessionId, opponentId);
+  _localVideoViewController.play(sessionId, _userId);
+  _remoteVideoViewController.play(sessionId, _opponentId);
 }
 
 @override
@@ -126,7 +126,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
     QBRTCSession session = await QB.webrtc.call(opponentIds, sessionType);
     print('starting call'+session.toString());
     sessionId = session.id;
-    play(session.id);
+    play(session.id,opponentId,userId);
   } on PlatformException catch (e) {
     print('error while initializing call'+e.toString());
   }
@@ -138,7 +138,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
     QBRTCSession session = await QB.webrtc.accept(sessionId);
     print('listening call'+session.id+', initiatorid:'+session.initiatorId.toString());
     sessionId = session.id;
-    play(sessionId);
+    play(sessionId,userId,opponentId);
     setState(() {
   //    _callStarted = true;
     });
