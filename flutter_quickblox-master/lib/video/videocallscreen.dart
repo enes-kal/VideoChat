@@ -27,8 +27,8 @@ int opponentId = 123729719;
 
 Future<void> play(String sessionId,int _opponentId,int _userId ) async {
   
-  _localVideoViewController.play(sessionId, _userId);
-  _remoteVideoViewController.play(sessionId, _opponentId);
+  _localVideoViewController.play(sessionId, userId);
+  _remoteVideoViewController.play(sessionId, opponentId);
 }
 
 @override
@@ -107,6 +107,7 @@ void _rejectCall()async
 
 
   void _onLocalVideoViewCreated(RTCVideoViewController controller) {
+    print('INIT LOCAL VIDEO VIEW'+controller.toString());
   _localVideoViewController = controller;
 }
 
@@ -124,7 +125,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
 
   try {
     QBRTCSession session = await QB.webrtc.call(opponentIds, sessionType);
-    print('starting call'+session.toString());
+    print('starting call'+session.id);
     sessionId = session.id;
     play(session.id,opponentId,userId);
   } on PlatformException catch (e) {
@@ -165,8 +166,8 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
   print('listening for call');
   String eventName = QBRTCEventTypes.CALL;
   try { 
-    
-    await QB.webrtc.subscribeRTCEventTypes(eventName, (data) async {
+   
+    await QB.webrtc.subscribeRTCEvent(eventName, (data) async {
       Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
       Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
       String sessionId = sessionMap["id"];
@@ -180,7 +181,7 @@ void _onRemoteVideoViewCreated(RTCVideoViewController controller) {
      // play(myQBUserId,initiatorId,sessionId);
     });
 
-    await QB.webrtc.subscribeRTCEventTypes(QBRTCEventTypes.RECEIVED_VIDEO_TRACK, (data) async {
+    await QB.webrtc.subscribeRTCEvent(QBRTCEventTypes.RECEIVED_VIDEO_TRACK, (data) async {
       Map<String, Object> payloadMap = new Map<String, Object>.from(data["payload"]);
       Map<String, Object> sessionMap = new Map<String, Object>.from(payloadMap["session"]);
       String sessionId = sessionMap["id"];
