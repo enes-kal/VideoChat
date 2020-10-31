@@ -21,17 +21,19 @@ RTCVideoViewController _remoteVideoViewController;
 
 
 
-  String sessionId = "ad78810b51ab7dcab24e535877942ccab901536d";
+  String sessionId = "TestSessionID";
 int userId = 123730736;
 int opponentId = 123729719;
 
-Future<void> play() async {
+Future<void> play(String sessionId ) async {
+  
   _localVideoViewController.play(sessionId, userId);
   _remoteVideoViewController.play(sessionId, opponentId);
 }
 
 @override
   void initState() {
+    initvideo();
     // TODO: implement initState
     super.initState();
   }
@@ -40,6 +42,7 @@ Future<void> play() async {
   {
     try {
   await QB.webrtc.init();
+  
 } on PlatformException catch (e) {
   // Some error occured, look at the exception message for more details
 }
@@ -73,12 +76,12 @@ new Container(
   decoration: new BoxDecoration(color: Colors.black54),
 ),
 RaisedButton(child:Text('CALL'), onPressed: (){
- // getcurrentsession();
+  getcurrentsession();
 
-  play();
+  play(sessionId);
 }),
 RaisedButton(child: Text('ACCEPT'),onPressed: (){
-acceptcall();
+_acceptCall();
 })
         ],
       ),
@@ -86,20 +89,24 @@ acceptcall();
   }
 
 
-    void acceptcall()async
-    {
-    Map<String, Object> userInfo = new Map();
+     _acceptCall() async{
+  try {
 
-try {
-  QBRTCSession session = await QB.webrtc.accept(sessionId, userInfo: userInfo);
-  print(session.id);
-} on PlatformException catch (e) {
-  print('xxxE'+e);
-  // Some error occured, look at the exception message for more details   
+    QBRTCSession session = await QB.webrtc.accept(sessionId);
+    print('listening call'+session.id+', initiatorid:'+session.initiatorId.toString());
+    sessionId = session.id;
+    play(sessionId);
+    setState(() {
+    //  _callStarted = true;
+    });
+
+  } on PlatformException catch (e) {
+    // Some error occured, look at the exception message for more details
+  }
 }
 
 
-    }
+
   Future<void> getcurrentsession()async {
     initvideo();
     List<int> opponentIds = [123729719, 123730736];
@@ -109,6 +116,7 @@ try {
      QBRTCSession sessionx = await QB.webrtc.call(opponentIds, sessionType);
     //  sessionx.id; 
  // QBSession session = await QB.auth.getSession();
+ sessionId=sessionx.id;
   print(sessionx.id);
 } on PlatformException catch (e) {
   // Some error occured, look at the exception message for more details
